@@ -141,7 +141,9 @@ def test_context_local_home_is_used_when_host_omits_lifecycle_home(tmp_path, mon
         engine.shutdown()
 
 
-def test_plugin_registration_uses_context_local_home(tmp_path, monkeypatch):
+def test_plugin_registration_uses_launch_home_not_plugin_discovery_scope(
+    tmp_path, monkeypatch
+):
     default_home = tmp_path / "default"
     profile_b = tmp_path / "profile-b"
     _write_profile_config(default_home, threshold=0.17, timeout=17)
@@ -150,6 +152,7 @@ def test_plugin_registration_uses_context_local_home(tmp_path, monkeypatch):
     active_home = ContextVar("active_home", default=str(default_home))
     core = ModuleType("hermes_constants")
     setattr(core, "get_hermes_home", lambda: active_home.get())
+    setattr(core, "get_launch_hermes_home", lambda: default_home)
     monkeypatch.setitem(sys.modules, "hermes_constants", core)
     monkeypatch.setenv("HERMES_HOME", str(default_home))
     monkeypatch.delenv("LCM_CONTEXT_THRESHOLD", raising=False)
@@ -169,9 +172,9 @@ def test_plugin_registration_uses_context_local_home(tmp_path, monkeypatch):
     engine = ctx.engine
     assert engine is not None
     try:
-        assert engine._config.context_threshold == 0.77
-        assert engine._config.summary_timeout_ms == 77_000
-        assert engine._store.db_path == profile_b / "lcm.db"
+        assert engine._config.context_threshold == 0.17
+        assert engine._config.summary_timeout_ms == 17_000
+        assert engine._store.db_path == default_home / "lcm.db"
     finally:
         engine.shutdown()
 

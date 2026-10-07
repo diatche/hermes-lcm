@@ -362,7 +362,7 @@ def _make_command_handler(handle_lcm_command, engine, resolve_active_lcm_engine)
 
 def register(ctx):
     """Plugin entry point — register the LCM context engine and tools."""
-    from .config import LCMConfig, _resolve_hermes_home
+    from .config import LCMConfig, _resolve_launch_hermes_home
     from .engine import LCMEngine, resolve_active_lcm_engine
     from .schemas import (
         LCM_GREP,
@@ -382,8 +382,10 @@ def register(ctx):
         LCM_DOCTOR,
     )
 
-    # Resolve the context-local routed home without mutating process-global env.
-    hermes_home = str(_resolve_hermes_home())
+    # Bind the process-wide prototype to the gateway's launch profile. Plugin
+    # discovery may temporarily enter the profile that owns the plugin source;
+    # per-agent clones still rebind from lifecycle ``hermes_home`` context.
+    hermes_home = str(_resolve_launch_hermes_home())
 
     config = LCMConfig.from_env(hermes_home=hermes_home or None)
 

@@ -173,6 +173,23 @@ def _resolve_hermes_home(hermes_home: str | Path | None = None) -> Path:
     return Path(os.environ.get("HERMES_HOME") or Path.home() / ".hermes").expanduser()
 
 
+def _resolve_launch_hermes_home() -> Path:
+    """Resolve the process launch home, ignoring temporary routed scopes.
+
+    Plugin discovery can temporarily enter the profile that owns an installed
+    plugin. That scope is correct for discovery, but must not own a process-wide
+    context-engine prototype's storage.
+    """
+    try:
+        from hermes_constants import get_launch_hermes_home
+
+        return Path(str(get_launch_hermes_home())).expanduser()
+    except (ImportError, AttributeError):
+        return Path(
+            os.environ.get("HERMES_HOME") or Path.home() / ".hermes"
+        ).expanduser()
+
+
 def _hermes_config_path(hermes_home: str | Path | None = None) -> Path:
     return _resolve_hermes_home(hermes_home) / "config.yaml"
 
